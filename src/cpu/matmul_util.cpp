@@ -5,6 +5,8 @@
  */
 #include "matmul_util.h"
 
+#include <string>
+
 namespace {
 
 // Constantes de SplitMix64 (Steele, Lea y Flood, 2014).
@@ -126,8 +128,9 @@ inline uint64_t splitmix64_next(uint64_t& state) {
 #define MATMUL_CXX_STD "c"
 #endif
 
-// La lista de ISA empieza con un espacio (" sse ..."); "isa=" lo absorbe.
-constexpr const char kBuildInfo[] =
+// La lista de ISA empieza con un espacio (" sse ..."); se quita en tiempo de
+// ejecución en matmul_util_build_info().
+constexpr const char kBuildInfoRaw[] =
     "compiler=" MATMUL_COMPILER
     "; cxx_std=" MATMUL_CXX_STD
     "; flags=" MATMUL_BUILD_FLAGS
@@ -161,7 +164,18 @@ double matmul_util_checksum(const float* M, uint64_t count) {
 }
 
 const char* matmul_util_build_info(void) {
-    return kBuildInfo;
+    // Se construye una sola vez (inicialización de estáticos locales: segura
+    // entre hilos desde C++11) y vive hasta el final del programa.
+    static const std::string info = [] {
+        std::string text = kBuildInfoRaw;
+        const std::string from = "isa= ";
+        const std::string::size_type pos = text.find(from);
+        if (pos != std::string::npos) {
+            text.replace(pos, from.size(), "isa=");
+        }
+        return text;
+    }();
+    return info.c_str();
 }
 
 }  // extern "C"
