@@ -1,0 +1,18 @@
+# Artefactos de compilación (C++ vía Makefile y Rust vía Cargo)
+/build/
+/harness/target/
+
+# Corridas de prueba rápidas (make bench-quick): no forman parte de los resultados oficiales
+/results/pruebas/
+
+# Archivos temporales y de editores
+*.o
+*.a
+*.d
+*.tmp
+*~
+*.swp
+.vscode/
+.idea/
+.cache/
+compile_commands.json
