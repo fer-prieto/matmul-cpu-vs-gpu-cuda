@@ -11,6 +11,8 @@
 
 use clap::Parser;
 use matbench::bench::{self, RunConfig, Runner};
+#[cfg(feature = "openblas")]
+use matbench::ffi;
 use matbench::registry::{self, Implementation, Threading};
 use matbench::report::{self, Consolidation, RunPaths, RunWriters};
 use matbench::say;
@@ -425,8 +427,24 @@ fn default_mt_threads(affinity: Option<&[usize]>) -> usize {
         .unwrap_or_else(|| std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1))
 }
 
-fn openblas_info(_mt_threads: usize) -> Option<OpenBlasInfo> {
-    None
+/// Información de OpenBLAS para el env_<run>.json (None si no está compilado).
+fn openblas_info(mt_threads: usize) -> Option<OpenBlasInfo> {
+    #[cfg(feature = "openblas")]
+    {
+        let (config, corename, parallel_mode, num_procs) = ffi::openblas_info();
+        Some(OpenBlasInfo {
+            config,
+            corename,
+            parallel_mode,
+            num_procs,
+            threads_mt: mt_threads,
+        })
+    }
+    #[cfg(not(feature = "openblas"))]
+    {
+        let _ = mt_threads;
+        None
+    }
 }
 
 fn print_list() {

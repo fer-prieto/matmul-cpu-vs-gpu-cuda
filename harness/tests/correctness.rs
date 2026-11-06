@@ -125,6 +125,27 @@ fn ikj_vs_ijk_aleatorio() {
     }
 }
 
+/// Solo con la feature `openblas` (make test-ref): ikj debe coincidir con
+/// cblas_sgemm en los mismos tamaños, incluido uno que no es potencia de 2.
+#[test]
+#[cfg(feature = "openblas")]
+fn ikj_vs_openblas() {
+    for n in [64, 128, 256, 300] {
+        let a = Matrix::random(n, 42, STREAM_A);
+        let b = Matrix::random(n, 42, STREAM_B);
+        let mut c_blas = Matrix::zeros(n);
+        ffi::openblas_1t_timed(&a, &b, &mut c_blas).expect("tamaños válidos");
+        let c_ikj = multiply(ffi::matmul_ikj, &a, &b);
+        let cmp = validate::compare(&c_ikj, &c_blas);
+        assert!(
+            cmp.rel_error < TEST_TOLERANCE,
+            "n = {n}: error relativo {:e} (máx. abs. {:e})",
+            cmp.rel_error,
+            cmp.max_abs_error
+        );
+    }
+}
+
 #[test]
 fn propias_vs_referencia_f64_independiente() {
     for n in [17, 50, 96] {

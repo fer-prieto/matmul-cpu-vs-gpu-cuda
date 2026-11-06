@@ -88,6 +88,18 @@ fn run_cpu_ikj(a: &Matrix, b: &Matrix, c: &mut Matrix, _threads: usize) -> Resul
     ffi::matmul_ikj_timed(a, b, c)
 }
 
+/// Referencia OpenBLAS a 1 hilo: comparación justa con el código secuencial.
+#[cfg(feature = "openblas")]
+fn run_openblas_1t(a: &Matrix, b: &Matrix, c: &mut Matrix, _threads: usize) -> Result<f64, FfiError> {
+    ffi::openblas_1t_timed(a, b, c)
+}
+
+/// Referencia OpenBLAS multihilo: solo informativa (techo absoluto de la CPU).
+#[cfg(feature = "openblas")]
+fn run_openblas_mt(a: &Matrix, b: &Matrix, c: &mut Matrix, threads: usize) -> Result<f64, FfiError> {
+    ffi::openblas_mt_timed(a, b, c, threads)
+}
+
 /// Implementaciones compiladas en este binario, en el orden en que se miden.
 pub fn available() -> Vec<Implementation> {
     let list = vec![
@@ -108,6 +120,28 @@ pub fn available() -> Vec<Implementation> {
             run_timed: run_cpu_ikj,
         },
     ];
+    // Referencias externas: solo si la biblioteca se compiló con OPENBLAS=1.
+    #[cfg(feature = "openblas")]
+    let list = {
+        let mut list = list;
+        list.push(Implementation {
+            name: CPU_OPENBLAS_1T,
+            description: "Referencia: cblas_sgemm con 1 hilo. Techo práctico secuencial de la CPU.",
+            kind: Kind::Referencia,
+            slow: false,
+            threading: Threading::Single,
+            run_timed: run_openblas_1t,
+        });
+        list.push(Implementation {
+            name: CPU_OPENBLAS_MT,
+            description: "Referencia: cblas_sgemm multihilo (informativa). Techo absoluto de la CPU.",
+            kind: Kind::Referencia,
+            slow: false,
+            threading: Threading::Multi,
+            run_timed: run_openblas_mt,
+        });
+        list
+    };
     list
 }
 

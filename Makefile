@@ -33,7 +33,13 @@ CPPFLAGS := -Iinclude
 LDFLAGS  :=
 
 # 1 = compilar también la referencia OpenBLAS (opcional, ver Fase 6 del plan).
+# Con OpenBLAS instalado (en Artix/Arch: `doas pacman -S openblas`) basta
+# `make bench-ref`. Las dos variables siguientes permiten encontrar el header
+# cblas.h y la biblioteca si viven fuera de las rutas por defecto, p. ej.:
+#   make bench-ref OPENBLAS_CFLAGS="-I/usr/include/openblas"
 OPENBLAS ?= 0
+OPENBLAS_CFLAGS ?=
+OPENBLAS_LIBS ?= -lopenblas
 
 # Argumentos extra para el arnés o el binario C++, p. ej.:
 #   make bench ARGS="--sizes 256,512"      make baseline ARGS="512 1024"
@@ -54,6 +60,17 @@ CARGO_MANIFEST := harness/Cargo.toml
 # Código propio (evaluable) + utilidades auxiliares (generador, checksum, info).
 LIB_SRCS       := src/cpu/matmul_cpu.cpp src/cpu/matmul_util.cpp
 CARGO_FEATURES :=
+
+# Con OPENBLAS=1 la biblioteca incluye el envoltorio de REFERENCIA (no
+# evaluable) de cblas_sgemm y el arnés se compila con la feature `openblas`,
+# que registra cpu_openblas_1t y cpu_openblas_mt. Sin esa opción no se compila
+# nada relacionado y el proyecto funciona igual.
+ifeq ($(OPENBLAS),1)
+LIB_SRCS       += src/cpu/matmul_openblas.cpp
+CPPFLAGS       += $(OPENBLAS_CFLAGS)
+LDFLAGS        += $(OPENBLAS_LIBS)
+CARGO_FEATURES := --features openblas
+endif
 
 LIB_OBJS := $(patsubst src/cpu/%.cpp,$(OBJ_DIR)/%.o,$(LIB_SRCS))
 MAIN_OBJ := $(OBJ_DIR)/main_cpu.o
@@ -83,7 +100,7 @@ export BUILD_CONFIG_TEXT
 # =============================================================================
 #  Objetivos principales
 # =============================================================================
-.PHONY: all lib cpu bench bench-quick test baseline env asm consolidate clean help FORCE
+.PHONY: all lib cpu bench bench-quick bench-ref test test-ref baseline env asm consolidate clean help FORCE
 
 all: lib cpu        ## Compila la biblioteca y el binario autónomo C++
 
@@ -100,6 +117,14 @@ bench-quick: lib    ## Prueba rápida de extremo a extremo (N=256,512) en result
 
 test: lib           ## Tests de correctitud (cargo test --release)
 	$(CARGO) test --release --manifest-path $(CARGO_MANIFEST) $(CARGO_FEATURES)
+
+bench-ref:         ## Benchmark con OpenBLAS de referencia (compila con OPENBLAS=1; ARGS="..." para opciones)
+	$(MAKE) lib OPENBLAS=1
+	$(CARGO) run --release --manifest-path $(CARGO_MANIFEST) --features openblas -- $(ARGS)
+
+test-ref:          ## Tests de correctitud con OpenBLAS (compila con OPENBLAS=1)
+	$(MAKE) lib OPENBLAS=1
+	$(CARGO) test --release --manifest-path $(CARGO_MANIFEST) --features openblas
 
 baseline: $(CPU_BIN) | $(RESULTS_DIR)  ## Ejecuta cpu_baseline y guarda tabla (.txt) y mediciones (.csv)
 	@set -o pipefail; ts=$$(date +%Y%m%d-%H%M%S); out="$(RESULTS_DIR)/cpp_baseline_$$ts"; \

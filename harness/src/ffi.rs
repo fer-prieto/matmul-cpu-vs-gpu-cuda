@@ -26,6 +26,20 @@ mod sys {
         pub fn matmul_util_fill_random(m: *mut f32, count: u64, seed: u64, stream: u64);
         pub fn matmul_util_checksum(m: *const f32, count: u64) -> f64;
         pub fn matmul_util_build_info() -> *const c_char;
+
+        // include/matmul_ref.h: implementaciones de REFERENCIA (no evaluables).
+        // Solo existen en la biblioteca si se compiló con `make lib OPENBLAS=1`.
+        #[cfg(feature = "openblas")]
+        pub fn matmul_ref_openblas_1t_timed(a: *const f32, b: *const f32, c: *mut f32, n: u64) -> f64;
+        #[cfg(feature = "openblas")]
+        pub fn matmul_ref_openblas_mt_timed(a: *const f32, b: *const f32, c: *mut f32, n: u64, threads: u64) -> f64;
+        #[cfg(feature = "openblas")]
+        pub fn matmul_ref_openblas_info(
+            config: *mut *const c_char,
+            corename: *mut *const c_char,
+            parallel_mode: *mut libc::c_int,
+            num_procs: *mut libc::c_int,
+        );
     }
 }
 
@@ -124,6 +138,45 @@ pub fn checksum_cpp(m: &Matrix) -> f64 {
 pub fn build_info() -> String {
     // SAFETY: la función devuelve una cadena estática terminada en NUL.
     unsafe { c_str_to_string(sys::matmul_util_build_info()) }
+}
+
+// --- Referencia OpenBLAS (solo con la feature `openblas`) --------------------
+
+/// C = A × B con `cblas_sgemm` de OpenBLAS usando exactamente 1 hilo.
+///
+/// Implementación de REFERENCIA (no evaluable): techo práctico de la CPU con
+/// el que se compara el código propio y referencia de validación en N grande.
+#[cfg(feature = "openblas")]
+pub fn openblas_1t_timed(a: &Matrix, b: &Matrix, c: &mut Matrix) -> Result<f64, FfiError> {
+    call_timed(sys::matmul_ref_openblas_1t_timed, a, b, c)
+}
+
+/// C = A × B con `cblas_sgemm` de OpenBLAS multihilo (solo informativa: techo
+/// absoluto de la CPU; NO comparable con el código secuencial).
+#[cfg(feature = "openblas")]
+pub fn openblas_mt_timed(a: &Matrix, b: &Matrix, c: &mut Matrix, threads: usize) -> Result<f64, FfiError> {
+    let n = check_sizes(a, b, c)?;
+    // SAFETY: ver `call`; el número de hilos es un u64 simple.
+    Ok(unsafe { sys::matmul_ref_openblas_mt_timed(a.as_ptr(), b.as_ptr(), c.as_mut_ptr(), n, threads as u64) })
+}
+
+/// Información de la biblioteca OpenBLAS enlazada: (config, corename, modo de
+/// paralelismo, unidades de ejecución). Para la sección "Entorno de prueba".
+#[cfg(feature = "openblas")]
+pub fn openblas_info() -> (String, String, i32, i32) {
+    let mut config: *const c_char = std::ptr::null();
+    let mut corename: *const c_char = std::ptr::null();
+    let mut parallel_mode: i32 = 0;
+    let mut num_procs: i32 = 0;
+    // SAFETY: los cuatro punteros son locales válidos del tipo correcto y la
+    // función solo los escribe; las cadenas que devuelve OpenBLAS son
+    // estáticas y viven todo el programa (se copian a String de inmediato).
+    unsafe { sys::matmul_ref_openblas_info(&mut config, &mut corename, &mut parallel_mode, &mut num_procs) };
+    // SAFETY: OpenBLAS devuelve cadenas estáticas terminadas en NUL (nunca
+    // nulas según su implementación, pero se tolera).
+    let config = unsafe { c_str_to_string(config) };
+    let corename = unsafe { c_str_to_string(corename) };
+    (config, corename, parallel_mode, num_procs)
 }
 
 /// Convierte una cadena C en `String` (vacía si el puntero es nulo).
