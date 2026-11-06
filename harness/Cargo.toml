@@ -1,0 +1,37 @@
+[package]
+name = "matbench"
+version = "0.1.0"
+edition = "2021"
+description = "Arnés de benchmark para la multiplicación de matrices CPU vs GPU (IF557ZIN). Unidad 1: línea base en CPU."
+authors = ["David Fernando Prieto Cardoso"]
+publish = false
+build = "build.rs"
+
+# Biblioteca (la usan los tests de integración en tests/) + binario (CLI).
+[lib]
+name = "matbench"
+path = "src/lib.rs"
+
+[[bin]]
+name = "matbench"
+path = "src/main.rs"
+
+[features]
+default = []
+# Añade OpenBLAS como implementación de REFERENCIA (no evaluable): techo de
+# rendimiento en CPU y validación para N grande. Requiere la biblioteca C++
+# compilada con `make lib OPENBLAS=1`; lo más cómodo es `make bench-ref`.
+openblas = []
+
+# Solo infraestructura del arnés (CLI, exportación y fechas); el cómputo
+# evaluable está en C++ y se enlaza desde build/libmatmul_cpu.a.
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+clap = { version = "4", features = ["derive"] }
+csv = "1"
+libc = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
