@@ -1,68 +1,10 @@
-<!--
-═══════════════════════════════════════════════════════════════════════════
-GUÍA DE RELLENO (leer antes de migrar a LaTeX) — borra este comentario al final
-═══════════════════════════════════════════════════════════════════════════
-Este reporte está completo salvo los NÚMEROS de la corrida oficial. Cada valor
-pendiente aparece como un token entre llaves dobles {{...}}. Busca el token,
-cópialo y sustitúyelo por el número real leyéndolo de los archivos que genera
-el arnés (todos en results/unidad1/):
-
-  • env_<run>.json          → entorno (CPU, cachés, RAM, SO, flags, OpenBLAS)
-  • summary_<run>.csv       → una fila por (impl × N) con los estadísticos
-  • validation_<run>.csv    → errores relativos/máximos y Freivalds
-  • table_<run>.md          → misma tabla de resultados, ya formateada
-  • all_summary.csv         → consolidado de todas las corridas (por si hay varias)
-
-Qué hay que rellenar (solo 3 cosas dependen de la corrida oficial):
-  1) TABLAS DE RESULTADOS (Sección 6): tokens {{summary...}} y {{validation...}}.
-  2) GOBERNADOR de CPU (Sección 4): token {{env.frequency.governor}}.
-  3) OPENBLAS y THROTTLING (Secciones 4 y 7): {{env.openblas.config}} y
-     {{env.thermal.throttle_pkg_ms_during_run}} (solo si usaste make bench-ref).
-
-  Todo lo demás de la Sección 4 (CPU, cachés, RAM, SO, compilador) ya viene
-  PRE-LLENADO: son constantes de ESTA máquina, confirmadas contra env_<run>.json.
-  Si cambias de equipo, vuelve a copiarlos desde el env.json correspondiente.
-
-Convención de tokens (ruta real dentro de env_<run>.json entre puntos):
-  {{summary.<impl>.<N>.<columna>}}          ejemplo {{summary.cpu_ikj.1024.t_median_s}}
-  {{env.<clave>.<subclave>}}                 ejemplo {{env.frequency.governor}}
-  {{validation.<impl>.<N>.<columna>}}        ejemplo {{validation.cpu_ikj.4096.rel_error}}
-
-Columnas de summary_<run>.csv (para los tokens {{summary...}}):
-  impl, kind, n, reps, t_min_s, t_median_s, t_mean_s, t_std_s,
-  gflops, speedup_vs_ijk, pct_of_openblas, validated_against, rel_error
-
-Columnas de validation_<run>.csv (para los tokens {{validation...}}):
-  rel_error, max_abs_error, freivalds_rel_error, valid, ...
-
-CÓMO OBTENER LOS DATOS:
-  1) Prepara la máquina (corriente conectada, gobernador performance, sin apps).
-  2) make test            → debe pasar.
-  3) make bench           → resultados oficiales en results/unidad1/.
-     (opcional) make bench-ref  → añade cpu_openblas_1t / cpu_openblas_mt.
-  4) Los tokens se rellenan con los valores de summary_<run>.csv y env_<run>.json.
-
-IMAGEN (opcional, solo si aporta — NO hace falta ninguna foto):
-  Si quieres una figura, lo valioso es UN gráfico de barras "GFLOPS por
-  implementación y tamaño" (o de líneas "tiempo mediano vs N"). Se genera con
-  matplotlib desde results/unidad1/all_summary.csv, NO es una foto de pantalla:
-      x = N (1024, 2048, 4096), agrupado por impl (cpu_ijk, cpu_ikj, cpu_openblas_1t)
-      y = gflops (escala log)
-  Guárdalo como docs/unidad1/figuras/gflops_vs_n.png y en la Sección 6 sustituye
-  la línea marcada [FIGURA-GFLOPS] por:
-      ![GFLOPS por implementación y tamaño](figuras/gflops_vs_n.png)
-  Si decides no incluir gráfico (es opcional en esta unidad), borra la línea [FIGURA-GFLOPS].
-  No se necesita capturar ninguna fotografía del hardware ni de la pantalla.
-═══════════════════════════════════════════════════════════════════════════
--->
-
 # Multiplicación de matrices de gran escala (CPU vs GPU con CUDA)
 ## Reporte breve — Unidad 1: línea base secuencial en CPU
 
 **Curso:** Arquitecturas de Alto Rendimiento (IF557ZIN)
 **Autor:** David Fernando Prieto Cardoso
 **Docente:** Henry Samuel Dueñas de la Cruz
-**Fecha:** {{fecha}}
+**Fecha:** 8 de noviembre de 2026
 
 ---
 
@@ -70,10 +12,11 @@ IMAGEN (opcional, solo si aporta — NO hace falta ninguna foto):
 
 Este reporte documenta la primera entrega del proyecto de multiplicación de
 matrices de gran escala `C = A × B` en precisión simple (FP32). Se implementa
-desde cero la versión secuencial en CPU en C/C++ con dos órdenes de bucles —el
+desde cero la versión secuencial en CPU en C/C++ con dos órdenes de bucles —la
 ingenua `i-j-k` y la optimizada `i-k-j`— y se miden el tiempo de cómputo, el
-speedup y los GFLOPS para matrices de N = 1024, 2048 y 4096. Se describe el
-algoritmo, el entorno de prueba y los resultados base, que servirán como
+speedup y los GFLOPS para matrices de N = 1024, 2048 y 4096. La versión
+`i-k-j` alcanza un speedup de ~36× frente a `i-j-k` y entre el 11 % y el 25 %
+del techo práctico de la CPU (OpenBLAS a 1 hilo). Estos resultados sirven como
 denominador de referencia (`T_CPU`) para los speedups frente a los kernels CUDA
 de las Unidades 2 y 3.
 
@@ -153,8 +96,8 @@ for (i) for (k) { aik = A[i][k]; for (j) C[i][j] += aik * B[k][j]; }
   y la fila `i` de `C` se reutiliza en cada iteración de `k`, permaneciendo en
   L1/L2.
 - **Vectorización:** las iteraciones de `j` son independientes, por lo que el
-  compilador vectoriza el bucle con SIMD (en esta CPU, AVX de 8 floats por
-  instrucción con `-O3 -march=native`).
+  compilador vectoriza el bucle con SIMD (en esta CPU, AVX2 con FMA: 8 floats
+  por instrucción y multiply-add fusionado).
 
 La implementación está en `include/matmul_cpu.h` y `src/cpu/matmul_cpu.cpp`
 (escrita desde cero). Las funciones con interfaz C (`extern "C"`) reciben los
@@ -180,27 +123,28 @@ consultado se estudia y se cita en `docs/referencias.md`.
 ## 4. Entorno de prueba
 
 Los valores de esta tabla provienen de `results/unidad1/env_<run>.json`,
-generado automáticamente por el arnés antes de cada corrida.
+generado automáticamente por el arnés antes de la corrida.
 
-| Componente | Valor |
-|---|---|
-| CPU | Intel Core i5-2540M @ 2.60 GHz (Sandy Bridge) |
-| Núcleos / hilos | 2 núcleos / 4 hilos |
-| SIMD soportado | SSE4.2, AVX (sin AVX2, FMA ni AVX-512) |
-| Caché L1d | 32 KiB |
-| Caché L2 | 256 KiB (por núcleo) |
-| Caché L3 | 3 MiB (compartida) |
-| RAM | 12 GiB (12 412 735 488 bytes) |
-| Sistema operativo | Artix Linux (rolling), kernel 7.2.10-hardened1-1-hardened |
-| Compilador | g++ (GCC) 16.2.1 20260810 |
-| Flags de compilación | `-O3 -march=native -std=c++17 -Wall -Wextra -fPIC` |
-| `-march=native` resuelve a | `sandybridge` (AVX) |
-| Rust / make | rustc 1.99.1 · GNU Make 4.4.1 |
-| Gobernador de CPU | {{env.frequency.governor}} |
-| OpenBLAS (si aplica) | {{env.openblas.config}} |
+| Componente                 | Valor                                               |
+| -------------------------- | --------------------------------------------------- |
+| CPU                        | Intel Core i7-12700KF (Alder Lake)                  |
+| Núcleos / hilos            | 10 núcleos / 20 hilos (vista de WSL2)               |
+| SIMD soportado             | SSE4.2, AVX, AVX2, FMA (sin AVX-512)                |
+| Caché L1d                  | 48 KiB                                              |
+| Caché L2                   | 1.25 MiB (por núcleo)                               |
+| Caché L3                   | 25 MiB (compartida)                                 |
+| RAM                        | 15.5 GiB                                            |
+| Sistema operativo          | Ubuntu 24.04.5 LTS (WSL2, kernel 6.18.54-microsoft) |
+| Compilador                 | g++ (GCC) 13.3.0                                    |
+| Flags de compilación       | `-O3 -march=native -std=c++17 -Wall -Wextra -fPIC`  |
+| `-march=native` resuelve a | `alderlake` (AVX2, FMA)                             |
+| Rust / make                | rustc 1.99.1 · GNU Make 4.3                         |
+| Gobernador de CPU          | no disponible (WSL2)                                |
+| OpenBLAS                   | 0.3.26 DYNAMIC_ARCH (MAX_THREADS=64)                |
 
-> Nota: al ser una laptop, los resultados dependen del estado de alimentación y
-> temperatura; ver la Sección 7.
+> **Nota sobre WSL2:** la medición se ejecutó dentro de WSL2, que **no expone**
+> los sensores de temperatura ni el gobernador de frecuencias del host. Por eso
+> el reporte no incluye temperatura ni throttling térmico (ver Sección 7).
 
 ---
 
@@ -221,81 +165,83 @@ generado automáticamente por el arnés antes de cada corrida.
   media y la desviación estándar.
 - **GFLOPS y speedup:** `GFLOPS = 2·N³ / (t_mediana · 10⁹)`; el speedup de
   referencia de esta unidad es `S = T_ijk / T_ikj` (efecto de la localidad de
-  caché; pendiente de confirmar con el docente).
+  caché).
 - **Validación de correctitud:** comparación contra una referencia calculada en
   `f64` (error relativo de Frobenius y error absoluto máximo) y verificación
   probabilística de Freivalds; tolerancia `1e-4`. La referencia preferida es
-  `cpu_openblas_1t` si está compilado y, si no, `cpu_ijk`.
+  `cpu_openblas_1t`.
 - **Control de hilos de OpenBLAS:** se mide `cpu_openblas_1t` (1 hilo, la
-  comparación justa con el código secuencial) y `cpu_openblas_mt` (todos los
-  hilos, solo informativa como techo absoluto). El porcentaje frente a OpenBLAS
-  se calcula contra la variante de 1 hilo.
+  comparación justa con el código secuencial) y `cpu_openblas_mt` (20 hilos,
+  solo informativa como techo absoluto). El porcentaje frente a OpenBLAS se
+  calcula contra la variante de 1 hilo.
 
 ---
 
 ## 6. Resultados base
 
-Los valores provienen de `results/unidad1/summary_<run>.csv` (o
-`all_summary.csv`). Los GFLOPS usan la mediana.
+Los valores provienen de `results/unidad1/summary_<run>.csv`. Los GFLOPS usan
+la mediana.
 
 ### 6.1 Tiempo de cómputo (mediana) y GFLOPS
 
-| Implementación | Tipo | N | t_mediana (s) | GFLOPS |
-|---|---|---|---|---|
-| cpu_ijk | propia | 1024 | {{summary.cpu_ijk.1024.t_median_s}} | {{summary.cpu_ijk.1024.gflops}} |
-| cpu_ikj | propia | 1024 | {{summary.cpu_ikj.1024.t_median_s}} | {{summary.cpu_ikj.1024.gflops}} |
-| cpu_ijk | propia | 2048 | {{summary.cpu_ijk.2048.t_median_s}} | {{summary.cpu_ijk.2048.gflops}} |
-| cpu_ikj | propia | 2048 | {{summary.cpu_ikj.2048.t_median_s}} | {{summary.cpu_ikj.2048.gflops}} |
-| cpu_ijk | propia | 4096 | {{summary.cpu_ijk.4096.t_median_s}} | {{summary.cpu_ijk.4096.gflops}} |
-| cpu_ikj | propia | 4096 | {{summary.cpu_ikj.4096.t_median_s}} | {{summary.cpu_ikj.4096.gflops}} |
-| cpu_openblas_1t | referencia | 1024 | {{summary.cpu_openblas_1t.1024.t_median_s}} | {{summary.cpu_openblas_1t.1024.gflops}} |
-| cpu_openblas_1t | referencia | 2048 | {{summary.cpu_openblas_1t.2048.t_median_s}} | {{summary.cpu_openblas_1t.2048.gflops}} |
-| cpu_openblas_1t | referencia | 4096 | {{summary.cpu_openblas_1t.4096.t_median_s}} | {{summary.cpu_openblas_1t.4096.gflops}} |
-| cpu_openblas_mt | referencia | 1024 | {{summary.cpu_openblas_mt.1024.t_median_s}} | {{summary.cpu_openblas_mt.1024.gflops}} |
-| cpu_openblas_mt | referencia | 2048 | {{summary.cpu_openblas_mt.2048.t_median_s}} | {{summary.cpu_openblas_mt.2048.gflops}} |
-| cpu_openblas_mt | referencia | 4096 | {{summary.cpu_openblas_mt.4096.t_median_s}} | {{summary.cpu_openblas_mt.4096.gflops}} |
+| Implementación  | Tipo       | N    | t_mediana (s) | GFLOPS |
+| --------------- | ---------- | ---- | ------------- | ------ |
+| cpu_ijk         | propia     | 1024 | 2.212         | 0.97   |
+| cpu_ikj         | propia     | 1024 | 0.0614        | 34.95  |
+| cpu_ijk         | propia     | 2048 | 24.207        | 0.71   |
+| cpu_ikj         | propia     | 2048 | 0.654         | 26.26  |
+| cpu_ijk         | propia     | 4096 | —             | —      |
+| cpu_ikj         | propia     | 4096 | 8.882         | 15.47  |
+| cpu_openblas_1t | referencia | 1024 | 0.0157        | 137.01 |
+| cpu_openblas_1t | referencia | 2048 | 0.122         | 140.61 |
+| cpu_openblas_1t | referencia | 4096 | 0.959         | 143.38 |
+| cpu_openblas_mt | referencia | 1024 | 0.0035        | 611.35 |
+| cpu_openblas_mt | referencia | 2048 | 0.0237        | 724.88 |
+| cpu_openblas_mt | referencia | 4096 | 0.175         | 784.37 |
 
-> Si no se compiló OpenBLAS (`make bench-ref`), se omiten las filas
-> `cpu_openblas_*` y la columna `% OpenBLAS` queda vacía.
+> `cpu_ijk` se omite en N = 4096 por ser demasiado lenta para N > 2048
+> (tarda ~24 s solo en N = 2048).
 
 ### 6.2 Speedup (ikj frente a ijk) y % de OpenBLAS
 
-| N | S = T_ijk / T_ikj | % de OpenBLAS (GFLOPS_ikj / GFLOPS_openblas_1t × 100) |
-|---|---|---|
-| 1024 | {{summary.cpu_ikj.1024.speedup_vs_ijk}} | {{summary.cpu_ikj.1024.pct_of_openblas}} |
-| 2048 | {{summary.cpu_ikj.2048.speedup_vs_ijk}} | {{summary.cpu_ikj.2048.pct_of_openblas}} |
-| 4096 | {{summary.cpu_ikj.4096.speedup_vs_ijk}} | {{summary.cpu_ikj.4096.pct_of_openblas}} |
+| N    | S = T_ijk / T_ikj | % de OpenBLAS (GFLOPS_ikj / GFLOPS_openblas_1t × 100) |
+| ---- | ----------------- | ----------------------------------------------------- |
+| 1024 | 36.0              | 25.5 %                                                |
+| 2048 | 37.0              | 18.7 %                                                |
+| 4096 | —                 | 10.8 %                                                |
 
-[FIGURA-GFLOPS]
+> El speedup de N = 4096 no se reporta porque `cpu_ijk` se omitió en ese tamaño.
 
 ### 6.3 Validación de correctitud
 
-| Implementación | N | Error relativo (Frobenius) | Freivalds |
-|---|---|---|---|
-| cpu_ikj | 1024 | {{validation.cpu_ikj.1024.rel_error}} | {{validation.cpu_ikj.1024.freivalds_rel_error}} |
-| cpu_ikj | 2048 | {{validation.cpu_ikj.2048.rel_error}} | {{validation.cpu_ikj.2048.freivalds_rel_error}} |
-| cpu_ikj | 4096 | {{validation.cpu_ikj.4096.rel_error}} | {{validation.cpu_ikj.4096.freivalds_rel_error}} |
+| Implementación | N    | Error relativo (Frobenius) | Freivalds |
+| -------------- | ---- | -------------------------- | --------- |
+| cpu_ikj        | 1024 | 5.85×10⁻⁷                  | 5.41×10⁻⁷ |
+| cpu_ikj        | 2048 | 8.45×10⁻⁷                  | 8.48×10⁻⁷ |
+| cpu_ikj        | 4096 | 1.19×10⁻⁶                  | 1.16×10⁻⁶ |
 
-> Todos los errores quedan por debajo de la tolerancia `1e-4` (en la práctica,
-> al sumar en el mismo orden, `cpu_ikj` y `cpu_ijk` coinciden bit a bit; frente
-> a OpenBLAS el error relativo es del orden de `1e-7`).
+> Todos los errores quedan varios órdenes por debajo de la tolerancia `1e-4`
+> (el error absoluto máximo es de ~3.7×10⁻⁴ en N = 4096). `cpu_ijk` presenta
+> errores equivalentes.
 
 ---
 
 ## 7. Observaciones y limitaciones
 
-- **Variabilidad en laptop:** con el gobernador `schedutil`, la frecuencia
-  oscila durante la rampa y el coeficiente de variación (CV) puede superar el
-  20 % en tamaños pequeños. Por eso se reporta la mediana y se recomienda
-  `performance` + corriente conectada para la corrida oficial.
-- **Throttling térmico:** es una limitación propia de laptops; el arnés registra
-  el throttling y la temperatura por ejecución. En la corrida oficial fue de
-  {{env.thermal.throttle_pkg_ms_during_run}} ms.
-- **Distancia al techo de OpenBLAS:** la implementación `i-k-j` alcanza
-  {{summary.cpu_ikj.4096.pct_of_openblas}} % del techo secuencial. La brecha se
-  explica por las técnicas que no aplica: tiling multinivel, empaquetado de
-  datos y micro-kernels en ensamblador. Esta diferencia es justamente la
-  motivación para el tiling en las Unidades 2 y 3.
+- **Entorno WSL2 sin sensores:** la máquina de prueba es WSL2 sobre Windows,
+  por lo que **no se pudo registrar temperatura, frecuencia ni throttling**
+  térmico (el arnés los deja vacíos). No es una limitación del código sino del
+  entorno virtualizado.
+- **Estabilidad de la medición:** el coeficiente de variación (CV) se mantiene
+  bajo (≤ 6.4 % en casi todos los casos), lo que indica una medición estable.
+- **Speedup y localidad de caché:** `i-k-j` es ~36–37× más rápido que `i-j-k`
+  gracias a la localidad espacial/temporal y a la vectorización AVX2+FMA.
+- **Distancia al techo de OpenBLAS:** `i-k-j` alcanza 25.5 % (N=1024), 18.7 %
+  (N=2048) y 10.8 % (N=4096) del techo secuencial. La brecha **crece con N**
+  porque `i-k-j` no aplica tiling multinivel, empaquetado de datos ni
+  micro-kernels en ensamblador; cuando N excede la caché L2 (1.25 MiB), la
+  matriz ya no cabe en caché y el rendimiento cae de ~35 a ~15 GFLOPS. Esta
+  diferencia es justamente la motivación para el tiling en las Unidades 2 y 3.
 - **Precisión:** el análisis se limita a FP32; otras precisiones quedan como
   extensión.
 
@@ -304,7 +250,7 @@ Los valores provienen de `results/unidad1/summary_<run>.csv` (o
 ## 8. Siguientes pasos
 
 1. Implementar el **kernel CUDA naive** (un hilo por elemento, acceso directo a
-   memoria global) en la máquina con GPU de la universidad (Unidad 2).
+   memoria global) en esta máquina con GPU NVIDIA (RTX 4060 Ti) (Unidad 2).
 2. Instrumentar con `cudaEventRecord` (tiempo de kernel) y `cudaMemcpy`
    (tiempo de transferencia Host↔Device) para separar cómputo y PCIe.
 3. Comparar `S = T_CPU / T_GPU` contra la línea base aquí establecida.

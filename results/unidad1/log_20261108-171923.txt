@@ -1,0 +1,146 @@
+matbench 0.1.0 · Unidad 1: línea base en CPU
+Corrida      : 20261108-171923
+Salida       : /home/skeletor/semestre/multiplicacion/results/unidad1
+CPU          : 12th Gen Intel(R) Core(TM) i7-12700KF · 10 núcleos / 20 hilos · SIMD: SSE2 AVX AVX2 FMA
+Cachés       : L1d 48K · L1i 32K · L2 1280K · L3 25600K
+Frecuencia   : gobernador ? · driver ? · turbo ? · rango ?-? MHz
+Alimentación : sin información
+Temperatura  : ? (sin sensor)
+Afinidad     : CPUs 0-19
+Compilación  : g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 · -O3 -march=native -std=c++17 -Wall -Wextra -fPIC · -march=native = alderlake
+Rust         : rustc 1.99.1 (58cf8f9c3 2026-10-13) · perfil release · features: openblas
+Git          : 66ceabe32fdd (con cambios sin commit)
+Tamaños      : 1024, 2048, 4096
+Repeticiones : 5 (3 para N >= 4096) · calentamiento 1 · semilla 42
+Implement.   : cpu_ijk (propia, lenta: solo N <= 2048), cpu_ikj (propia), cpu_openblas_1t (referencia), cpu_openblas_mt (referencia)
+Validación   : contra cpu_openblas_1t + Freivalds (2 vectores) · tolerancia 1e-4
+Telemetría   : cada 500 ms -> telemetry_20261108-171923.csv
+
+== N = 1024  (4.0 MiB por matriz, 2.147 GFLOP por producto) ==
+  cpu_ijk [propia]: 1 calentamiento(s) + 5 repeticion(es)
+    warm-up  1/1      2.141501 s     1.003 GFLOPS | - C | - MHz | cpu 5
+    rep      1/5      2.166293 s     0.991 GFLOPS | - C | - MHz | cpu 4
+    rep      2/5      2.252190 s     0.954 GFLOPS | - C | - MHz | cpu 4
+    rep      3/5      2.255954 s     0.952 GFLOPS | - C | - MHz | cpu 5
+    rep      4/5      2.153779 s     0.997 GFLOPS | - C | - MHz | cpu 5
+    rep      5/5      2.212323 s     0.971 GFLOPS | - C | - MHz | cpu 5
+    -> mediana 2.212323 s | 0.971 GFLOPS | min 2.153779 s | sigma 0.047303 s | CV 2.14 %
+  cpu_ikj [propia]: 1 calentamiento(s) + 5 repeticion(es)
+    warm-up  1/1      0.061897 s    34.694 GFLOPS | - C | - MHz | cpu 5
+    rep      1/5      0.065956 s    32.559 GFLOPS | - C | - MHz | cpu 5
+    rep      2/5      0.070118 s    30.627 GFLOPS | - C | - MHz | cpu 5
+    rep      3/5      0.061441 s    34.952 GFLOPS | - C | - MHz | cpu 5
+    rep      4/5      0.060918 s    35.252 GFLOPS | - C | - MHz | cpu 5
+    rep      5/5      0.060968 s    35.223 GFLOPS | - C | - MHz | cpu 5
+    -> mediana 0.061441 s | 34.952 GFLOPS | min 0.060918 s | sigma 0.004075 s | CV 6.38 %
+  cpu_openblas_1t [referencia]: 1 calentamiento(s) + 5 repeticion(es)
+    warm-up  1/1      0.018459 s   116.335 GFLOPS | - C | - MHz | cpu 5
+    rep      1/5      0.015714 s   136.658 GFLOPS | - C | - MHz | cpu 5
+    rep      2/5      0.015674 s   137.008 GFLOPS | - C | - MHz | cpu 5
+    rep      3/5      0.015571 s   137.913 GFLOPS | - C | - MHz | cpu 5
+    rep      4/5      0.015760 s   136.258 GFLOPS | - C | - MHz | cpu 5
+    rep      5/5      0.015494 s   138.605 GFLOPS | - C | - MHz | cpu 5
+    -> mediana 0.015674 s | 137.008 GFLOPS | min 0.015494 s | sigma 0.000109 s | CV 0.70 %
+  cpu_openblas_mt [referencia]: 1 calentamiento(s) + 5 repeticion(es), 20 hilos
+    warm-up  1/1      0.015301 s   140.349 GFLOPS | - C | - MHz | cpu 5
+    rep      1/5      0.003564 s   602.524 GFLOPS | - C | - MHz | cpu 5
+    rep      2/5      0.003486 s   615.943 GFLOPS | - C | - MHz | cpu 5
+    rep      3/5      0.003418 s   628.230 GFLOPS | - C | - MHz | cpu 5
+    rep      4/5      0.003513 s   611.355 GFLOPS | - C | - MHz | cpu 5
+    rep      5/5      0.003842 s   558.999 GFLOPS | - C | - MHz | cpu 5
+    -> mediana 0.003513 s | 611.355 GFLOPS | min 0.003418 s | sigma 0.000164 s | CV 4.59 %
+  Validación (tolerancia 1e-4): referencia cpu_openblas_1t + Freivalds con 2 vector(es)
+    cpu_ijk          OK    error rel. 5.96e-7, máx. abs. 6.87e-5 | Freivalds 5.43e-7
+    cpu_ikj          OK    error rel. 5.85e-7, máx. abs. 6.87e-5 | Freivalds 5.41e-7
+    cpu_openblas_1t  OK    es la referencia | Freivalds 2.85e-7
+    cpu_openblas_mt  OK    error rel. 1.40e-7, máx. abs. 2.48e-5 | Freivalds 2.78e-7
+
+== N = 2048  (16.0 MiB por matriz, 17.180 GFLOP por producto) ==
+  cpu_ijk [propia]: 1 calentamiento(s) + 5 repeticion(es)
+    warm-up  1/1     24.363116 s     0.705 GFLOPS | - C | - MHz | cpu 5
+    rep      1/5     24.206789 s     0.710 GFLOPS | - C | - MHz | cpu 5
+    rep      2/5     24.136620 s     0.712 GFLOPS | - C | - MHz | cpu 5
+    rep      3/5     24.290403 s     0.707 GFLOPS | - C | - MHz | cpu 5
+    rep      4/5     24.439534 s     0.703 GFLOPS | - C | - MHz | cpu 4
+    rep      5/5     23.903656 s     0.719 GFLOPS | - C | - MHz | cpu 4
+    -> mediana 24.206789 s | 0.710 GFLOPS | min 23.903656 s | sigma 0.198322 s | CV 0.82 %
+  cpu_ikj [propia]: 1 calentamiento(s) + 5 repeticion(es)
+    warm-up  1/1      0.613610 s    27.998 GFLOPS | - C | - MHz | cpu 4
+    rep      1/5      0.654276 s    26.258 GFLOPS | - C | - MHz | cpu 4
+    rep      2/5      0.624220 s    27.522 GFLOPS | - C | - MHz | cpu 4
+    rep      3/5      0.654184 s    26.262 GFLOPS | - C | - MHz | cpu 4
+    rep      4/5      0.661116 s    25.986 GFLOPS | - C | - MHz | cpu 4
+    rep      5/5      0.628453 s    27.337 GFLOPS | - C | - MHz | cpu 4
+    -> mediana 0.654184 s | 26.262 GFLOPS | min 0.624220 s | sigma 0.016839 s | CV 2.61 %
+  cpu_openblas_1t [referencia]: 1 calentamiento(s) + 5 repeticion(es)
+    warm-up  1/1      0.123137 s   139.518 GFLOPS | - C | - MHz | cpu 4
+    rep      1/5      0.120588 s   142.467 GFLOPS | - C | - MHz | cpu 4
+    rep      2/5      0.122892 s   139.797 GFLOPS | - C | - MHz | cpu 4
+    rep      3/5      0.122980 s   139.696 GFLOPS | - C | - MHz | cpu 4
+    rep      4/5      0.121235 s   141.707 GFLOPS | - C | - MHz | cpu 4
+    rep      5/5      0.122184 s   140.606 GFLOPS | - C | - MHz | cpu 4
+    -> mediana 0.122184 s | 140.606 GFLOPS | min 0.120588 s | sigma 0.001045 s | CV 0.86 %
+  cpu_openblas_mt [referencia]: 1 calentamiento(s) + 5 repeticion(es), 20 hilos
+    warm-up  1/1      0.030799 s   557.798 GFLOPS | - C | - MHz | cpu 4
+    rep      1/5      0.023700 s   724.884 GFLOPS | - C | - MHz | cpu 4
+    rep      2/5      0.023303 s   737.239 GFLOPS | - C | - MHz | cpu 4
+    rep      3/5      0.025038 s   686.155 GFLOPS | - C | - MHz | cpu 4
+    rep      4/5      0.023699 s   724.925 GFLOPS | - C | - MHz | cpu 4
+    rep      5/5      0.023841 s   720.610 GFLOPS | - C | - MHz | cpu 4
+    -> mediana 0.023700 s | 724.884 GFLOPS | min 0.023303 s | sigma 0.000658 s | CV 2.75 %
+  Validación (tolerancia 1e-4): referencia cpu_openblas_1t + Freivalds con 2 vector(es)
+    cpu_ijk          OK    error rel. 8.51e-7, máx. abs. 1.53e-4 | Freivalds 8.45e-7
+    cpu_ikj          OK    error rel. 8.45e-7, máx. abs. 1.56e-4 | Freivalds 8.48e-7
+    cpu_openblas_1t  OK    es la referencia | Freivalds 3.24e-7
+    cpu_openblas_mt  OK    error rel. 1.19e-7, máx. abs. 3.53e-5 | Freivalds 3.19e-7
+
+== N = 4096  (64.0 MiB por matriz, 137.439 GFLOP por producto) ==
+  cpu_ijk omitida en N = 4096: es lenta para N > 2048 (usa --include-slow)
+  cpu_ikj [propia]: 1 calentamiento(s) + 3 repeticion(es)
+    warm-up  1/1      8.884298 s    15.470 GFLOPS | - C | - MHz | cpu 4
+    rep      1/3      8.882345 s    15.473 GFLOPS | - C | - MHz | cpu 4
+    rep      2/3      8.897480 s    15.447 GFLOPS | - C | - MHz | cpu 4
+    rep      3/3      8.850597 s    15.529 GFLOPS | - C | - MHz | cpu 4
+    -> mediana 8.882345 s | 15.473 GFLOPS | min 8.850597 s | sigma 0.023927 s | CV 0.27 %
+  cpu_openblas_1t [referencia]: 1 calentamiento(s) + 3 repeticion(es)
+    warm-up  1/1      0.962208 s   142.837 GFLOPS | - C | - MHz | cpu 4
+    rep      1/3      0.955434 s   143.850 GFLOPS | - C | - MHz | cpu 4
+    rep      2/3      0.958538 s   143.384 GFLOPS | - C | - MHz | cpu 4
+    rep      3/3      0.967745 s   142.020 GFLOPS | - C | - MHz | cpu 4
+    -> mediana 0.958538 s | 143.384 GFLOPS | min 0.955434 s | sigma 0.006402 s | CV 0.67 %
+  cpu_openblas_mt [referencia]: 1 calentamiento(s) + 3 repeticion(es), 20 hilos
+    warm-up  1/1      0.173755 s   790.993 GFLOPS | - C | - MHz | cpu 4
+    rep      1/3      0.171659 s   800.653 GFLOPS | - C | - MHz | cpu 4
+    rep      2/3      0.177360 s   774.915 GFLOPS | - C | - MHz | cpu 4
+    rep      3/3      0.175221 s   784.374 GFLOPS | - C | - MHz | cpu 4
+    -> mediana 0.175221 s | 784.374 GFLOPS | min 0.171659 s | sigma 0.002880 s | CV 1.65 %
+  Validación (tolerancia 1e-4): referencia cpu_openblas_1t + Freivalds con 2 vector(es)
+    cpu_ikj          OK    error rel. 1.19e-6, máx. abs. 3.74e-4 | Freivalds 1.16e-6
+    cpu_openblas_1t  OK    es la referencia | Freivalds 3.27e-7
+    cpu_openblas_mt  OK    error rel. 1.14e-7, máx. abs. 5.53e-5 | Freivalds 3.23e-7
+
+== Resumen (GFLOPS = 2*N^3 / (t_mediana * 1e9)) ==
+impl             tipo           N reps  t_mediana(s)      t_min(s)    sigma(s)    CV%    GFLOPS    x_ijk   %OBLAS  validacion
+-----------------------------------------------------------------------------------------------------------------------------------------
+cpu_ijk          propia      1024    5      2.212323      2.153779    0.047303   2.14     0.971     1.00      0.7  OK (vs cpu_openblas_1t 6.0e-7; Freivalds 5.4e-7)
+cpu_ikj          propia      1024    5      0.061441      0.060918    0.004075   6.38    34.952    36.01     25.5  OK (vs cpu_openblas_1t 5.8e-7; Freivalds 5.4e-7)
+cpu_openblas_1t  referencia  1024    5      0.015674      0.015494    0.000109   0.70   137.008   141.15    100.0  OK (referencia; Freivalds 2.9e-7)
+cpu_openblas_mt  referencia  1024    5      0.003513      0.003418    0.000164   4.59   611.355   629.81    446.2  OK (vs cpu_openblas_1t 1.4e-7; Freivalds 2.8e-7)
+cpu_ijk          propia      2048    5     24.206789     23.903656    0.198322   0.82     0.710     1.00      0.5  OK (vs cpu_openblas_1t 8.5e-7; Freivalds 8.5e-7)
+cpu_ikj          propia      2048    5      0.654184      0.624220    0.016839   2.61    26.262    37.00     18.7  OK (vs cpu_openblas_1t 8.5e-7; Freivalds 8.5e-7)
+cpu_openblas_1t  referencia  2048    5      0.122184      0.120588    0.001045   0.86   140.606   198.12    100.0  OK (referencia; Freivalds 3.2e-7)
+cpu_openblas_mt  referencia  2048    5      0.023700      0.023303    0.000658   2.75   724.884  1021.38    515.5  OK (vs cpu_openblas_1t 1.2e-7; Freivalds 3.2e-7)
+cpu_ikj          propia      4096    3      8.882345      8.850597    0.023927   0.27    15.473        -     10.8  OK (vs cpu_openblas_1t 1.2e-6; Freivalds 1.2e-6)
+cpu_openblas_1t  referencia  4096    3      0.958538      0.955434    0.006402   0.67   143.384        -    100.0  OK (referencia; Freivalds 3.3e-7)
+cpu_openblas_mt  referencia  4096    3      0.175221      0.171659    0.002880   1.65   784.374        -    547.0  OK (vs cpu_openblas_1t 1.1e-7; Freivalds 3.2e-7)
+Duración total: 204.6 s · ejecuciones registradas: 60 · muestras de telemetría: 411
+
+Archivos de esta corrida (/home/skeletor/semestre/multiplicacion/results/unidad1):
+  raw_20261108-171923.csv
+  summary_20261108-171923.csv
+  validation_20261108-171923.csv
+  telemetry_20261108-171923.csv
+  env_20261108-171923.json
+  table_20261108-171923.md
+  log_20261108-171923.txt
+Consolidados en /home/skeletor/semestre/multiplicacion/results/unidad1: runs.csv (1 corridas), all_raw.csv (60 filas), all_summary.csv (11 filas), all_validation.csv (11 filas)
