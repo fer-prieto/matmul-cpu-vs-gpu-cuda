@@ -35,16 +35,17 @@
 // OPENBLAS_CFLAGS="-I<ruta>".
 #include <cblas.h>
 
-// Extensiones de OpenBLAS que no están en la interfaz CBLAS estándar. Se
-// declaran aquí (y no en un header ajeno) con la firma documentada en
-// https://github.com/OpenMathLib/OpenBLAS/blob/develop/cblas.h
+// Extensiones de OpenBLAS que no están en la interfaz CBLAS *estándar*: el
+// cblas.h de OpenBLAS sí las declara (devolviendo `char*`), el de netlib no.
+// Se declaran aquí con la MISMA firma que OpenBLAS para no generar conflicto
+// en ninguno de los dos casos (idéntica con su header, nueva con netlib).
 extern "C" {
 /// Fija el número de hilos que usan las llamadas posteriores.
 void openblas_set_num_threads(int num_threads);
 /// Configuración completa: "OpenBLAS <versión> <modo> <target> MAX_THREADS=...".
-const char* openblas_get_config(void);
+char* openblas_get_config(void);
 /// Nombre del micro-kernel seleccionado para esta CPU (p. ej. "SandyBridge").
-const char* openblas_get_corename(void);
+char* openblas_get_corename(void);
 /// 0 = secuencial, 1 = pthreads, 2 = OpenMP.
 int openblas_get_parallel(void);
 /// Unidades de ejecución que OpenBLAS puede usar en esta máquina.

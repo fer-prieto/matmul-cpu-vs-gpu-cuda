@@ -295,7 +295,10 @@ fn checksum_coincide_con_cpu_baseline() {
     let c = multiply(ffi::matmul_ikj, &a, &b);
     assert_eq!(c.checksum(), ffi::checksum_cpp(&c));
     let c_ijk = multiply(ffi::matmul_ijk, &a, &b);
-    assert_eq!(c.checksum().to_bits(), c_ijk.checksum().to_bits());
+    // Con FMA (-march=native en una CPU con AVX2/FMA) los órdenes ikj/ijk
+    // redondean distinto; se comparan con tolerancia, no bit a bit.
+    let cmp = validate::compare(&c, &c_ijk);
+    assert!(cmp.rel_error < TEST_TOLERANCE, "ikj vs ijk: {:e}", cmp.rel_error);
 }
 
 #[test]
