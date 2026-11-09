@@ -16,3 +16,6 @@
 .idea/
 .cache/
 compile_commands.json
+
+# Configuración local de Obsidian (no forma parte del entregable)
+docs/unidad1/.obsidian/
