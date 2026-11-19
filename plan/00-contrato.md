@@ -197,6 +197,20 @@ results/unidad3/   (misma estructura, además:)
 
 En `results/unidad2` y `results/unidad3` queda prohibido: hostname, usuario, IP, UUID/serial de GPU, rutas bajo `/home`, PID ajenos. Verificación: `grep -RniE "$(hostname)|$(id -un)|GPU-[0-9a-f]{8}-|/home/" results/unidad2 results/unidad3` → vacío.
 
-## 15. Puertas de calidad
+## 15. Desviaciones respecto del plan (halladas al ejecutar en el servidor)
+
+Todas se corrigieron en el código; quedan aquí como registro.
+
+| # | Lo planificado | Lo real | Corrección aplicada |
+|---|---|---|---|
+| 1 | `nvcc --version \| tail -1` da `release X.Y` | el toolkit imprime el `Build` al final | se parsea `release [0-9]+\.[0-9]+` en cualquier línea (`check_env.sh`, `run_u2/u3.sh`) |
+| 2 | regla nvcc sin `-Iinclude` (U2-T04) | `fatal error: cuda_util.h` | se añade `$(CPPFLAGS)` a la regla de `%.cu` |
+| 3 | `ncu_profile.sh --sizes $SIZES` | tres argumentos sueltos → exit 2 | `--sizes "$SIZES"` |
+| 4 | etapa `runs` usa `$RUN_ID` | al reanudar con otro id el `validation_*.csv` no existía | la etapa toma el `validation_*.csv` más reciente, registra ese `run_id` y es idempotente |
+| 5 | análisis de bancos: conflicto de 32 vías sin padding | el warp tiene `threadIdx.y` fijo → *broadcast* | comentario de `matmul_gpu.cu` y `docs/unidad3/README.md` corregidos; el padding resulta neutro/negativo (dato) |
+| 6 | `nvcc` en PATH | no está en el PATH no interactivo del servidor | `guard.sh`/`run_all.sh` prueban rutas habituales del toolkit |
+| 7 | volcado de hardware en `env/` | no estaba previsto para U2/U3 | se añade `env/hardware_<run>.txt` (solo lectura, sanitizado) |
+
+## 16. Puertas de calidad
 
 Ver `plan/INDICE.md` (§puertas): gate U0, gate U2 (antes de U3) y checklist final de clon limpio.

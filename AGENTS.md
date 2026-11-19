@@ -2,7 +2,7 @@
 
 ## Stack y versiones (servidor de referencia)
 - nvcc 12.2.140 (CUDA 12.2), target fijo `-arch=sm_60` (Quadro GP100, CC 6.0); g++ 11.4.0; make 4.3; bash; python3 >= 3.8 (stdlib; matplotlib solo para figuras).
-- Sin Rust, sin cmake, sin sudo por defecto. Build = Makefile + nvcc. Ver `plan/00-contrato.md`.
+- Sin Rust, sin cmake, sin sudo por defecto. Build = Makefile + nvcc; si `nvcc` no esta en PATH, `guard.sh`/`run_all.sh` prueban `/usr/local/cuda-12.2`, `/usr/local/cuda`, `/usr/local/cuda-12` y `/opt/cuda`. Ver `plan/00-contrato.md`.
 
 ## Lectura obligatoria antes de trabajar
 1. `plan/00-contrato.md` (decisiones, esquemas CSV, fórmulas, contrato de run_all.sh).

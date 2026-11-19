@@ -46,6 +46,22 @@ Mismas fórmulas que `docs/unidad2/README.md`. Además:
 - `% de cuBLAS = GFLOPS(gpu_tiled_pad) / GFLOPS(gpu_cublas) × 100`.
 - `Δ padding (%) = 100 · (GFLOPS_pad − GFLOPS_tiled) / GFLOPS_tiled`.
 
+## Resultados medidos (servidor del curso)
+
+Mediana de 5 repeticiones; GFLOPS con `t_kernel`.
+
+| N | naive | tiled | tiled_pad | cuBLAS | % de cuBLAS (tiled) | `S_kernel` tiled |
+|---|---|---|---|---|---|---|
+| 1024 | 88.99 | 1649.43 | 1652.85 | 6047.48 | 27.27 % | 123.9× |
+| 2048 | 400.76 | 2042.84 | 2014.71 | 8740.69 | 23.37 % | 162.5× |
+| 4096 | 348.10 | 1964.18 | 1907.87 | 8850.38 | 22.19 % | 245.4× |
+
+Ablación de padding (Δ respecto de `gpu_tiled`): **+0.21 %, −1.38 %, −2.87 %**
+→ el padding no aporta con esta forma de bloque (ver más abajo). Con el kernel
+rápido la transferencia pasa a pesar 65.1 %, 55.2 % y 38.6 % del tiempo total
+(para `cuBLAS` en 4096, el 72.9 %): el bus se vuelve el cuello de botella.
+Ancho de banda efectivo de PCIe: 4.6--5.2 GB/s.
+
 ## Análisis sugerido
 
 Con bloques de 32×32, cada warp agrupa 32 hilos con `threadIdx.y` fijo y

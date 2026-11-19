@@ -50,6 +50,26 @@ Todo lo anterior lo ejecuta `./run_all.sh --unit 2` (o `scripts/run_u2.sh --stag
 - Validación: `rel_error = ‖C − C_ref‖_F / ‖C_ref‖_F` en `double`, con
   `C_ref` calculada por `cpu_ikj`; se acepta si `rel_error ≤ 1e-4`.
 
+## Resultados medidos (servidor del curso)
+
+Mediana de 5 repeticiones, `T_CPU` = `cpu_ikj` medido en el mismo servidor.
+
+| N | `t_kernel` (s) | `t_total` (s) | GFLOPS | `S_kernel` | `S_total` | PCIe |
+|---|---|---|---|---|---|---|
+| 1024 | 0.023950 | 0.026685 | 89.66 | 6.74× | 6.05× | 10.2 % |
+| 2048 | 0.046263 | 0.057315 | 371.35 | 29.54× | 23.84× | 19.3 % |
+| 4096 | 0.397015 | 0.441634 | 346.18 | 43.25× | 38.88× | 10.1 % |
+
+El rendimiento **no es monótono**: 89.66 GFLOPS en 1024 frente a 371.35 en 2048.
+La hipótesis (pendiente de confirmar con el perfilador) es el patrón *strided*
+sobre la columna de `B`: el salto de 4 KiB concentra las líneas en pocos
+conjuntos de caché. Las tres medidas son estables (CV de 0.69 %, 5.53 % y
+0.04 %), así que no es ruido. El ancho de banda efectivo de PCIe es 4.5--4.6
+GB/s (memoria paginable, sin solape).
+
+Validación: error relativo 0.00 en los tres tamaños (la GPU acumula en el mismo
+orden y con FMA, igual que `cpu_ikj`).
+
 ## Limitaciones
 
 - Servidor compartido: los relojes de la GPU no se fijan salvo con `--use-sudo`;
