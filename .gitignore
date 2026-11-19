@@ -3,6 +3,7 @@
 /harness/target/
 
 # Corridas de prueba rápidas (make bench-quick): no forman parte de los resultados oficiales
+contexto/
 /results/pruebas/
 
 # Archivos temporales y de editores
@@ -19,3 +20,7 @@ compile_commands.json
 
 # Configuración local de Obsidian (no forma parte del entregable)
 docs/unidad1/.obsidian/
+
+# Sandbox y logs del servidor (nunca se versionan)
+/.sandbox/
+/logs/

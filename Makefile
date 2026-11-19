@@ -91,6 +91,8 @@ CXX_VERSION=$(CXX_VERSION)
 CXXFLAGS=$(CXXFLAGS)
 CPPFLAGS=$(CPPFLAGS)
 MARCH_NATIVE=$(MARCH_NATIVE)
+NVCC=$(NVCC)
+NVCC_VERSION=$(NVCC_VERSION)
 OPENBLAS=$(OPENBLAS)
 OPENBLAS_CFLAGS=$(OPENBLAS_CFLAGS)
 OPENBLAS_LIBS=$(OPENBLAS_LIBS)
@@ -100,7 +102,7 @@ export BUILD_CONFIG_TEXT
 # =============================================================================
 #  Objetivos principales
 # =============================================================================
-.PHONY: all lib cpu bench bench-quick bench-ref test test-ref baseline env asm consolidate clean help FORCE
+.PHONY: all lib cpu gpu bench bench-quick bench-ref test test-ref baseline env asm consolidate clean help FORCE
 
 all: lib cpu        ## Compila la biblioteca y el binario autónomo C++
 
@@ -158,6 +160,31 @@ help:               ## Muestra esta ayuda
 	@echo
 	@echo "Variables: CXX=$(CXX)  OPENBLAS=$(OPENBLAS)  ARGS=\"$(ARGS)\""
 	@echo "CXXFLAGS=$(CXXFLAGS)"
+
+# =============================================================================
+#  GPU (Unidades 2 y 3): kernels CUDA y binario de benchmark
+#
+#  Es independiente de los objetivos de la Unidad 1: `make` y `make cpu`
+#  siguen compilando exactamente lo mismo que antes. El binario GPU enlaza la
+#  biblioteca C++ (libmatmul_cpu.a) para reutilizar el generador, el checksum y
+#  la referencia cpu_ikj, y ademas libcublas (solo como referencia comparativa).
+# =============================================================================
+NVCC       ?= nvcc
+CUDA_ARCH  ?= 60
+NVCCFLAGS  := -O3 -std=c++17 -arch=sm_$(CUDA_ARCH) -Xcompiler "-O3 -Wall -Wextra"
+GPU_SRCS   := src/gpu/cuda_util.cu src/gpu/matmul_gpu.cu src/gpu/main_gpu.cu
+GPU_OBJS   := $(patsubst src/gpu/%.cu,$(OBJ_DIR)/%.o,$(GPU_SRCS))
+GPU_BIN    := $(BUILD_DIR)/bench_gpu
+
+NVCC_VERSION := $(shell $(NVCC) --version 2>/dev/null | tail -n 1)
+
+gpu: $(GPU_BIN)        ## Compila el binario de benchmark GPU (build/bench_gpu)
+
+$(OBJ_DIR)/%.o: src/gpu/%.cu $(BUILD_CONFIG) | $(OBJ_DIR)
+	$(NVCC) $(NVCCFLAGS) -c $< -o $@
+
+$(GPU_BIN): $(GPU_OBJS) $(LIB)
+	$(NVCC) $(NVCCFLAGS) $(GPU_OBJS) $(LIB) -lcublas -o $@
 
 # =============================================================================
 #  Reglas de compilación
