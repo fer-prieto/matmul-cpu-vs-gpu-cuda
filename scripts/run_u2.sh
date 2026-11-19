@@ -172,22 +172,43 @@ stage_figures() {
 stage_runs() {
     echo "== etapa runs =="
     local file="$OUT/runs.csv"
+    local val_file="$OUT/validation_${RUN_ID}.csv"
+    if [ ! -f "$val_file" ]; then
+        val_file="$(ls -1t "$OUT"/validation_*.csv 2>/dev/null | head -n 1)"
+    fi
+    if [ -z "$val_file" ] || [ ! -f "$val_file" ]; then
+        echo "error: no hay validation_*.csv en $OUT; corre antes la etapa bench" >&2
+        exit 1
+    fi
+    # La corrida registrada es la que produjo los datos, no necesariamente la
+    # actual: las etapas pueden reanudarse con otro run_id.
+    local data_run started
+    data_run="$(basename "$val_file" .csv)"
+    data_run="${data_run#validation_}"
+    if [ -f "$OUT/raw_${data_run}.csv" ]; then
+        started="$(date -u -r "$OUT/raw_${data_run}.csv" +%Y-%m-%dT%H:%M:%SZ)"
+    else
+        started="$STARTED_AT"
+    fi
+    if [ -f "$file" ] && awk -F',' -v id="$data_run" 'NR>1 && $1==id {found=1} END {exit !found}' "$file"; then
+        echo "OK (ya registrado) corrida $data_run"
+        return 0
+    fi
     if [ ! -f "$file" ]; then
         echo "run_id,label,status,started_at,finished_at,unit,impls,sizes,reps,warmup,seed,tolerance,all_valid,gpu_name,gpu_cc,gpu_driver,nvcc_version,clocks_locked,notes" >"$file"
     fi
-    local info name cc driver nvcc_line nvcc_version all_valid impls
+    local info name cc driver nvcc_version all_valid impls
     info="$("$REPO_ROOT/build/bench_gpu" --device-info 2>/dev/null | head -n 1)"
     name="$(printf '%s' "$info" | sed -n 's/.*name=\([^;]*\).*/\1/p')"
     cc="$(printf '%s' "$info" | sed -n 's/.*cc=\([^;]*\).*/\1/p')"
     driver="$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -n 1 | tr -d ' ')"
-    nvcc_line="$(nvcc --version 2>/dev/null | tail -n 1)"
-    nvcc_version="$(printf '%s' "$nvcc_line" | sed -n 's/.*release \([0-9.]*\).*/\1/p')"
-    all_valid="$(awk -F',' 'NR>1 {gsub(/"/,"",$11); if ($11 != "true") bad=1} END {print bad ? "false" : "true"}' "$OUT/validation_${RUN_ID}.csv")"
-    impls="$(awk -F',' 'NR>1 {print $2}' "$OUT/validation_${RUN_ID}.csv" | sort -u | paste -sd';' -)"
+    nvcc_version="$(nvcc --version 2>/dev/null | grep -oE 'release [0-9]+\.[0-9]+' | head -n 1 | awk '{print $2}')"
+    all_valid="$(awk -F',' 'NR>1 {gsub(/"/,"",$11); if ($11 != "true") bad=1} END {print bad ? "false" : "true"}' "$val_file")"
+    impls="$(awk -F',' 'NR>1 {print $2}' "$val_file" | sort -u | paste -sd';' -)"
     local locked="no"
     [ -n "$LOCKED_CLOCKS" ] && locked="yes"
     printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
-        "$RUN_ID" "" "completed" "$STARTED_AT" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$UNIT" \
+        "$data_run" "" "completed" "$started" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$UNIT" \
         "$impls" "$(printf '%s' "$SIZES" | tr ' ' ';')" "$REPS" "$WARMUP" "$SEED" "$TOLERANCE" \
         "$all_valid" "$name" "$cc" "$driver" "$nvcc_version" "$locked" "" >>"$file"
     echo "OK $file"

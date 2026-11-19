@@ -181,7 +181,7 @@ NVCC_VERSION := $(shell $(NVCC) --version 2>/dev/null | tail -n 1)
 gpu: $(GPU_BIN)        ## Compila el binario de benchmark GPU (build/bench_gpu)
 
 $(OBJ_DIR)/%.o: src/gpu/%.cu $(BUILD_CONFIG) | $(OBJ_DIR)
-	$(NVCC) $(NVCCFLAGS) -c $< -o $@
+	$(NVCC) $(NVCCFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(GPU_BIN): $(GPU_OBJS) $(LIB)
 	$(NVCC) $(NVCCFLAGS) $(GPU_OBJS) $(LIB) -lcublas -o $@

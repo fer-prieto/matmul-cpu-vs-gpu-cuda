@@ -17,18 +17,20 @@
  *  4. Envoltorio de cuBLAS (REFERENCIA, no evaluable): solo llama a la API.
  *
  * ---------------------------------------------------------------------------
- * Conflictos de banco en los tiles (justificacion del padding)
+ * Memoria compartida y bancos (por que se compara con y sin padding)
  * ---------------------------------------------------------------------------
- * sm_60 tiene 32 bancos de 4 bytes. Con tiles de lado 32 y stride 32:
- *   - As[ty][k]  -> direccion ty*32 + k -> banco (ty*32 + k) % 32 = k, igual
- *     para los 32 hilos de una columna del tile: conflicto de 32 vias.
- *   - Bs[k][tx]  -> banco (k*32 + tx) % 32 = tx, distinto por hilo: sin
- *     conflicto.
- * Con stride 33 (padding):
- *   - As[ty][k]  -> banco (ty*33 + k) % 32 = (ty + k) % 32: distinto por hilo.
- *   - Bs[k][tx]  -> banco (k*33 + tx) % 32 = (k + tx) % 32: distinto por hilo.
- * De ahi que la variante con padding sea mas rapida aunque reserve mas memoria
- * compartida: la comparacion empirica entre ambas es la ablacion de la Unidad 3.
+ * sm_60 tiene 32 bancos de 4 bytes. Con bloques de 32x32, cada warp agrupa 32
+ * hilos con threadIdx.y FIJO y threadIdx.x = 0..31, de modo que:
+ *   - As[ty][k] es la MISMA direccion para todo el warp (difusion/broadcast):
+ *     una sola transaccion, sin conflicto, con o sin padding.
+ *   - Bs[k][tx] recorre bancos consecutivos (tx): sin conflicto, con o sin
+ *     padding.
+ * Es decir, con esta forma de bloque el layout SIN padding ya es libre de
+ * conflictos: el padding (stride TILE+1) solo consume mas memoria compartida.
+ * La comparacion empirica gpu_tiled frente a gpu_tiled_pad (tabla_padding y
+ * padding_vs_n) lo cuantifica y es la ablacion de la Unidad 3.
+ * El conflicto apareceria si el warp abarcara varias filas del tile (p. ej.
+ * blockDim = (8, 32)), donde As[ty][k] cae en bancos distintos por ty.
  *
  * ---------------------------------------------------------------------------
  * Medicion

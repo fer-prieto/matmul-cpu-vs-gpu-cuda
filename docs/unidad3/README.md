@@ -48,11 +48,17 @@ Mismas fórmulas que `docs/unidad2/README.md`. Además:
 
 ## Análisis sugerido
 
-Con tiles de lado 32 y stride 32, la lectura `As[ty][k]` cae siempre en el banco
-`k` para los 32 hilos de una columna: conflicto de 32 vías. Con stride 33 el
-banco pasa a `(ty + k) % 32`, distinto por hilo. La tabla `tabla_padding` y la
-figura `padding_vs_n` cuantifican ese efecto; la distancia naive → tiled → cuBLAS
-muestra el resto del camino (coalescencia, ocupación, jerarquía de memoria).
+Con bloques de 32×32, cada warp agrupa 32 hilos con `threadIdx.y` fijo y
+`threadIdx.x = 0..31`. Por eso `As[ty][k]` es la misma dirección para todo el
+warp (difusión o *broadcast*, una transacción) y `Bs[k][tx]` recorre bancos
+consecutivos: **con esta forma de bloque el layout sin padding ya no tiene
+conflictos**. El padding (stride 33) solo consume más memoria compartida, y la
+tabla `tabla_padding` / figura `padding_vs_n` lo confirman (Δ dentro del ruido o
+ligeramente negativo). Es un resultado negativo legítimo: la ablación de
+*bank conflicts* debería mostrar diferencias con un bloque cuyo warp abarque
+varias filas del tile, p. ej. `blockDim = (8, 32)` o (30, 32), donde `As[ty][k]`
+cae en bancos distintos por `ty`. La distancia naive → tiled → cuBLAS muestra el
+resto del camino (coalescencia, ocupación, jerarquía de memoria).
 
 ## Limitaciones
 

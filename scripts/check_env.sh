@@ -26,11 +26,11 @@ fi
 # 2-4. nvcc y soporte de sm_60
 if command -v nvcc >/dev/null 2>&1; then
     pass "nvcc ($(command -v nvcc))"
-    nvcc_ver="$(nvcc --version 2>/dev/null | tail -n 1)"
-    if printf '%s' "$nvcc_ver" | grep -qE 'release (1[2-9]|[2-9][0-9])\.'; then
-        pass "nvcc version ($nvcc_ver)"
+    nvcc_ver="$(nvcc --version 2>/dev/null | grep -oE 'release [0-9]+\.[0-9]+' | head -n 1 | awk '{print $2}')"
+    if [ -n "$nvcc_ver" ] && awk -v v="$nvcc_ver" 'BEGIN { split(v, a, "."); exit !(a[1] >= 12) }'; then
+        pass "nvcc version $nvcc_ver"
     else
-        fallo "nvcc version" "se requiere CUDA >= 12.0 (detectado: ${nvcc_ver:-?})"
+        fallo "nvcc version" "se requiere CUDA >= 12.0 (detectado: ${nvcc_ver:-desconocida})"
     fi
     if nvcc --list-gpu-arch 2>/dev/null | grep -qw 'compute_60'; then
         pass "nvcc soporta compute_60"

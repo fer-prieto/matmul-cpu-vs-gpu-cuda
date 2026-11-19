@@ -63,7 +63,6 @@ public:
     HostMatrix& operator=(const HostMatrix&) = delete;
 
     float* data() { return data_; }
-    const float* data() const { return data_; }
     uint64_t count() const { return n_ * n_; }
 
 private:
@@ -89,7 +88,6 @@ public:
     DeviceMatrix& operator=(const DeviceMatrix&) = delete;
 
     float* data() { return data_; }
-    const float* data() const { return data_; }
 
 private:
     float* data_ = nullptr;
