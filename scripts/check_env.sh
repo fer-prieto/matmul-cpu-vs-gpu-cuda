@@ -38,7 +38,7 @@ if command -v nvcc >/dev/null 2>&1; then
         fallo "nvcc compute_60" "este toolkit no soporta sm_60 (instala CUDA 11.x/12.x)"
     fi
 else
-    fallo "nvcc" "no esta en PATH (agrega el CUDA toolkit al PATH)"
+    fallo "nvcc" "no esta en PATH ni en /usr/local/cuda*/bin (agrega el toolkit al PATH)"
     fallo "nvcc version" "sin nvcc no se puede compilar"
     fallo "nvcc compute_60" "sin nvcc no se puede compilar"
 fi

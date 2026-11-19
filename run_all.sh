@@ -136,6 +136,19 @@ if [ "$CLEAN_SANDBOX" -eq 1 ]; then
     echo "OK sandbox limpio (--clean-sandbox)"
 fi
 
+# Si nvcc no esta en PATH se prueba el toolkit en sus rutas habituales (solo
+# se modifica el PATH de este proceso; no se instala nada).
+if ! command -v nvcc >/dev/null 2>&1; then
+    for d in "${CUDA_HOME:-}" /usr/local/cuda-12.2 /usr/local/cuda /usr/local/cuda-12 /opt/cuda; do
+        if [ -n "$d" ] && [ -x "$d/bin/nvcc" ]; then
+            export PATH="$d/bin:$PATH"
+            export CUDA_HOME="$d"
+            echo "info: nvcc no estaba en PATH; se usa $d/bin"
+            break
+        fi
+    done
+fi
+
 mkdir -p "$REPO_ROOT/logs"
 LOG="$REPO_ROOT/logs/run_all_${RUN_ID}.log"
 exec > >(tee -a "$LOG") 2>&1

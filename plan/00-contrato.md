@@ -78,7 +78,7 @@ run_u2.sh / run_u3.sh → orquestan etapas 3..10 de su unidad; run_all.sh compon
 
 | Recurso | Uso |
 |---|---|
-| `nvcc` (PATH; típico `/usr/local/cuda-12.2/bin/nvcc`) | compilar; no se hardcodea ruta en Makefile |
+| `nvcc` (PATH; si falta, `guard.sh`/`run_all.sh` prueban `/usr/local/cuda-12.2`, `/usr/local/cuda`, `/usr/local/cuda-12`, `/opt/cuda` y agregan `bin/` solo al PATH del proceso) | compilar; no se hardcodea ruta en Makefile |
 | `/usr/local/cuda-12.2/lib64/libcudart.so.12`, `libcublas.so.12` | enlace (los resuelve nvcc) |
 | `/usr/bin/nvidia-smi` | consultas sanitizadas |
 | `g++`, `make`, `python3`, `awk`, `sort`, `date`, `curl` | toolchain |
