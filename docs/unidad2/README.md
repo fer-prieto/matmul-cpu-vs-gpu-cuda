@@ -1,5 +1,10 @@
 # Unidad 2 — GPU naive (memoria global)
 
+**Informe compilado:** [`reporte_unidad2.pdf`](reporte_unidad2.pdf) — PDF de la
+entrega (formato de la plantilla del curso). La fuente LaTeX vive en el
+repositorio `infome-template`, rama `unidad2` (tags `unidad2-final`).
+Este README es la guía de los datos de `results/unidad2/`.
+
 Kernel CUDA naive (un hilo por elemento de `C`, bloques de 16×16, acceso directo
 a memoria global), medición con `cudaEvent` del kernel y del total
 (host→device + kernel + device→host), validación contra `cpu_ikj` (tolerancia

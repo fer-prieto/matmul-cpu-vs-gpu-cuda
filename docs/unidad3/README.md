@@ -1,5 +1,10 @@
 # Unidad 3 — GPU tiled (memoria compartida) y análisis
 
+**Informe compilado:** [`reporte_unidad3.pdf`](reporte_unidad3.pdf) — PDF de la
+entrega (formato de la plantilla del curso). La fuente LaTeX vive en el
+repositorio `infome-template`, rama `unidad3` (tags `unidad3-final`).
+Este README es la guía de los datos de `results/unidad3/`.
+
 Kernel con memoria compartida (`TILE = 32`, bloques de 32×32 hilos, un elemento
 de `C` por hilo), su variante con **padding** (`As[32][33]`, `Bs[32][33]`) para
 eliminar los conflictos de banco, y `cublasSgemm` como techo de referencia.

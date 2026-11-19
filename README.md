@@ -12,9 +12,13 @@ Estado: **las tres unidades están implementadas y medidas.**
 
 | Unidad | Código | Resultados | Informe |
 |---|---|---|---|
-| 1 — CPU secuencial | `src/cpu/` | `results/unidad1/` | `docs/unidad1/` |
-| 2 — GPU naive | `src/gpu/matmul_gpu.cu` | `results/unidad2/` | `docs/unidad2/` |
-| 3 — GPU tiling + cuBLAS | `src/gpu/matmul_gpu.cu` | `results/unidad3/` | `docs/unidad3/` |
+| 1 — CPU secuencial | `src/cpu/` | `results/unidad1/` | `docs/unidad1/reporte_unidad1.pdf` |
+| 2 — GPU naive | `src/gpu/matmul_gpu.cu` | `results/unidad2/` | `docs/unidad2/reporte_unidad2.pdf` |
+| 3 — GPU tiling + cuBLAS | `src/gpu/matmul_gpu.cu` | `results/unidad3/` | `docs/unidad3/reporte_unidad3.pdf` |
+
+Cada `docs/unidadN/` contiene el **informe compilado** (PDF, formato de la
+plantilla del curso) y la guía de los datos de esa unidad; la fuente LaTeX vive
+en el repositorio `infome-template`, una rama por unidad.
 
 ---
 
@@ -136,7 +140,7 @@ scripts/            guard.sh, check_env, setup_sandbox, gpu_env_dump, run_u2, ru
                     collect_env.sh (volcado manual de la Unidad 1)
 run_all.sh          flujo completo del servidor (etapas reanudables + logs + resumen de fallo)
 results/unidad1|2|3 Resultados versionados (CSV, tablas .tex/.md y figuras PNG)
-docs/unidad1|2|3    Guía de resultados de cada unidad
+docs/unidad1|2|3    Informe compilado (PDF) y guía de resultados de cada unidad
 plan/               Contrato y plan de implementación por tareas (U0, U2, U3)
 ```
 
@@ -195,8 +199,8 @@ OpenBLAS (`OPENBLAS=0` por defecto).
 
 | Tag (repo) | Rama (informes) | Contenido |
 |---|---|---|
-| `unidad1` | `unidad1` | línea base en CPU + informe |
-| `unidad2` | `unidad2` | kernel naive + mediciones + informe |
-| `unidad3` | `unidad3` | tiling, padding y cuBLAS + informe |
+| `unidad1` | `unidad1` | línea base en CPU + informe (`docs/unidad1/reporte_unidad1.pdf`) |
+| `unidad2` | `unidad2` | kernel naive + mediciones + informe (`docs/unidad2/reporte_unidad2.pdf`) |
+| `unidad3` | `unidad3` | tiling, padding y cuBLAS + informe (`docs/unidad3/reporte_unidad3.pdf`) |
 
 Los informes viven en el repositorio `infome-template`, una rama por unidad.
