@@ -1,0 +1,2 @@
+run_id,moment,index,name,driver_version,memory_total_mib,memory_used_mib,memory_free_mib,compute_cap,clocks_sm_mhz,clocks_mem_mhz,temp_c,power_w,pstate,throttle_reasons,persistence_mode,pcie_gen_max,pcie_gen_current,pcie_width_current,compute_apps_count,compute_apps_used_mib,load1,extra
+20261119-011719,after,0,Quadro GP100,580.178.04,16384,0,16266,6.0,405,715,54,28.83,P0,0x0000000000000004,Disabled,3,3,16,0,0,1.38 0.99 0.71,

@@ -1,0 +1,16 @@
+\hline
+\textbf{Implementación} & \textbf{N} & \textbf{$S_{kernel}$} & \textbf{$S_{total}$} \\
+\hline
+gpu\_naive & 1024 & 6.69 & 6.10 \\
+gpu\_naive & 2048 & 31.88 & 26.29 \\
+gpu\_naive & 4096 & 43.49 & 39.28 \\
+gpu\_tiled & 1024 & 123.91 & 43.20 \\
+gpu\_tiled & 2048 & 162.49 & 72.77 \\
+gpu\_tiled & 4096 & 245.41 & 150.58 \\
+gpu\_tiled\_pad & 1024 & 124.16 & 43.69 \\
+gpu\_tiled\_pad & 2048 & 160.25 & 72.38 \\
+gpu\_tiled\_pad & 4096 & 238.38 & 150.57 \\
+gpu\_cublas & 1024 & 454.29 & 58.52 \\
+gpu\_cublas & 2048 & 695.23 & 110.69 \\
+gpu\_cublas & 4096 & 1105.81 & 299.33 \\
+\hline

@@ -1,0 +1,2 @@
+Build cuda_12.2.r12.2/compiler.33191640_0
+name=Quadro GP100; cc=6.0; mem_total_mib=16265; driver=13000; runtime=12020

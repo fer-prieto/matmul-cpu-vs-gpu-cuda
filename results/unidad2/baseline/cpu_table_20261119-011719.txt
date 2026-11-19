@@ -1,0 +1,17 @@
+=== Linea base CPU: C = A x B (FP32, row-major) ===
+Compilacion : compiler=gcc 11.4.0; cxx_std=201703L; flags=-O3 -march=native -std=c++17 -Wall -Wextra -fPIC; isa=sse sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2 fma avx512f; fma=yes; avx2=yes; avx512f=yes; optimize=yes; fast_math=no
+Semilla 42 | repeticiones 5 | calentamiento 1 | cpu_ijk hasta N=2048
+GFLOPS = 2*N^3 / (t * 1e9), con t = mediana de las repeticiones
+
+impl          N  reps   t_mediana(s)       t_min(s)     GFLOPS              checksum(C)
+-------- ------ ----- -------------- -------------- ---------- ------------------------
+cpu_ijk    1024     5       3.223654       3.223598      0.666           -2050.77842319
+cpu_ikj    1024     5       0.161321       0.161316     13.312           -2050.77842319
+           1024   speedup cpu_ikj vs cpu_ijk = 19.98x
+cpu_ijk    2048     5      35.524571      35.521973      0.484           -10797.6407292
+cpu_ikj    2048     5       1.366484       1.365640     12.572           -10797.6407292
+           2048   speedup cpu_ikj vs cpu_ijk = 26.00x
+cpu_ijk    4096   omitida: lenta para N > 2048 (usa --include-slow)
+cpu_ikj    4096     5      17.172296      16.717235      8.004           -32202.5358674
+
+Mediciones guardadas en /data/FernandoPrieto/alto-rendimiento-proyecto/results/unidad2/baseline/cpu_raw_20261119-011719.csv

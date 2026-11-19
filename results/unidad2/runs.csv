@@ -1,0 +1,2 @@
+run_id,label,status,started_at,finished_at,unit,impls,sizes,reps,warmup,seed,tolerance,all_valid,gpu_name,gpu_cc,gpu_driver,nvcc_version,clocks_locked,notes
+20261119-011719,,completed,2026-11-19T01:23:23Z,2026-11-19T01:25:23Z,2,gpu_naive,1024;2048;4096,5,1,42,1e-4,true,Quadro GP100,6.0,580.178.04,12.2,no,
